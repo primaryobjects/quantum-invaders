@@ -132,6 +132,24 @@ def update_enemy_position(enemy_position, enemy_speed, enemy_horizontal_speed):
 
     return enemy_position
 
+def handle_input(mouse_held_down, keys, qc, theta, phi):
+    if mouse_held_down == 'increase' or keys[pygame.K_LEFT]:
+        theta -= 0.1
+        qc.ry(-0.1, 0)
+    elif mouse_held_down == 'decrease' or keys[pygame.K_RIGHT]:
+        theta += 0.1
+        qc.ry(0.1, 0)
+    elif mouse_held_down == 'x' or keys[pygame.K_UP]:
+        phi += 0.1
+        qc.rx(0.1, 0)
+    elif keys[pygame.K_DOWN]:
+        phi -= 0.1
+        qc.rx(-0.1, 0)
+
+    player_color = update_color(qc)
+
+    return player_color, theta, phi
+
 create_enemy_count = 0
 
 prob_0_history = []
@@ -158,38 +176,9 @@ while not done:
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_held_down = False
 
-    # Execute action if mouse button is held down
-    if mouse_held_down == 'increase':
-        theta -= 0.1
-        qc.ry(-0.1, 0)
-        player_color = update_color(qc)
-    elif mouse_held_down == 'decrease':
-        theta += 0.1
-        qc.ry(0.1, 0)
-        player_color = update_color(qc)
-    elif mouse_held_down == 'x':
-        phi += 0.1
-        qc.rx(0.1, 0)
-        player_color = update_color(qc)
-
-    # Handle keyboard input
+    # Handle input
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        theta -= 0.1
-        qc.ry(-0.1, 0)
-        player_color = update_color(qc)
-    if keys[pygame.K_RIGHT]:
-        theta += 0.1
-        qc.ry(0.1, 0)
-        player_color = update_color(qc)
-    if keys[pygame.K_UP]:
-        phi -= 0.1
-        qc.rx(-0.1, 0)
-        player_color = update_color(qc)
-    if keys[pygame.K_DOWN]:
-        phi += 0.1
-        qc.rx(0.1, 0)
-        player_color = update_color(qc)
+    player_color, theta, phi = handle_input(mouse_held_down, keys, qc, theta, phi)
 
     # Calculate player qubit probabilities
     backend = Aer.get_backend('statevector_simulator')
