@@ -294,7 +294,7 @@ while not done:
 
     # Remove destroyed enemies from display
     for i in sorted(destroyed_enemies[:], reverse=True):
-        if destroyed_enemies_alpha[i] <= 0:
+        if i < len(destroyed_enemies_alpha) and destroyed_enemies_alpha[i] <= 0:
             del enemy_qcs[i]
             del enemy_colors[i]
             del enemy_positions[i]
@@ -305,6 +305,8 @@ while not done:
             if player_score % 10 == 0:
                 enemy_speed += 1
                 enemy_horizontal_speed += 0.2
+        elif i >= len(destroyed_enemies_alpha):
+            destroyed_enemies.remove(i)
 
     num_enemies = len(enemy_qcs)
 
