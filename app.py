@@ -39,6 +39,14 @@ lasers = []
 player_pos = (320 * scale, 240 * scale)
 player_radius = 60 * scale
 
+button_width = 120
+button_height = 50
+button_margin = 20
+screen_height = screen.get_height()
+increase_button = pygame.Rect(button_margin, screen_height - button_height - button_margin, button_width, button_height)
+decrease_button = pygame.Rect(button_width * 2 + button_margin * 3, screen_height - button_height - button_margin, button_width, button_height)
+x_button = pygame.Rect(button_width + button_margin * 2, screen_height - button_height - button_margin, button_width, button_height)
+
 def update_player_color():
     # Run the circuit and get the statevector
     backend = Aer.get_backend('statevector_simulator')
@@ -117,12 +125,36 @@ phi = 0
 pygame.mixer.Sound('sounds/polizia4.wav').play()
 
 # Game loop
+mouse_held_down = False
 done = False
 while not done:
     # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if increase_button.collidepoint(event.pos):
+                mouse_held_down = 'increase'
+            elif decrease_button.collidepoint(event.pos):
+                mouse_held_down = 'decrease'
+            elif x_button.collidepoint(event.pos):
+                mouse_held_down = 'x'
+        elif event.type == pygame.MOUSEBUTTONUP:
+            mouse_held_down = False
+
+    # Execute action if mouse button is held down
+    if mouse_held_down == 'increase':
+        theta -= 0.1
+        qc.ry(-0.1, 0)
+        player_color = update_player_color()
+    elif mouse_held_down == 'decrease':
+        theta += 0.1
+        qc.ry(0.1, 0)
+        player_color = update_player_color()
+    elif mouse_held_down == 'x':
+        phi += 0.1
+        qc.rx(0.1, 0)
+        player_color = update_player_color()
 
     # Handle keyboard input
     keys = pygame.key.get_pressed()
@@ -295,6 +327,25 @@ while not done:
     text = font.render(f"Score: {player_score}", True, (255, 255, 255))
     text_rect = text.get_rect(center=(320 * scale, 20))
     screen.blit(text, text_rect)
+
+    # Draw the buttons
+    pygame.draw.rect(screen, (0, 75, 0), increase_button)
+    increase_text = font.render("Rotate Y-", True, (255, 255, 255))
+    screen.blit(increase_text,
+                (increase_button.centerx - increase_text.get_width() // 2,
+                increase_button.centery - increase_text.get_height() // 2))
+    pygame.draw.rect(screen, (0, 75, 0), decrease_button)
+    decrease_text = font.render("Rotate Y+", True, (255, 255, 255))
+    screen.blit(decrease_text,
+                (decrease_button.centerx - decrease_text.get_width() // 2,
+                decrease_button.centery - decrease_text.get_height() // 2))
+
+    # Draw the new button
+    pygame.draw.rect(screen, (0, 75, 0), x_button)
+    x_text = font.render("X", True, (255, 255, 255))
+    screen.blit(x_text,
+                (x_button.centerx - x_text.get_width() // 2,
+                x_button.centery - x_text.get_height() // 2))
 
     # Draw bar chart.
     bar_width = 100 * scale
