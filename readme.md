@@ -5,7 +5,7 @@ A quantum computing alien invaders game, developed with ChatGPT4.
 
 Match your qubit's color to the enemy colored spheres to save the universe!
 
-[Play Online](https://replit.com/@primaryobjects/quantum-invaders?v=1)
+[Play Online](https://replit.com/@primaryobjects/Quantum-Invaders)
 
 ## Screenshots
 
