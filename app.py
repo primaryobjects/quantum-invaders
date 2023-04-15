@@ -60,6 +60,7 @@ def update_color(aqc):
 
     # Set the player's color based on the qubit state
     player_color = (prob_0 * 255, 0, prob_1 * 255)
+
     return player_color
 
 player_color = update_color(qc)
@@ -97,6 +98,39 @@ def generate_enemy():
     enemy_color = (prob_0 * 255, 0, prob_1 * 255)
 
     return eqc, enemy_color
+
+def handle_collisions(player_color, enemy_colors, destroyed_enemies, player_score):
+    tolerance_range = 5
+    for i in range(num_enemies):
+        if abs(player_color[0] - enemy_colors[i][0]) < tolerance_range and abs(player_color[2] - enemy_colors[i][2]) < tolerance_range:
+            if i not in destroyed_enemies:
+                destroyed_enemies.append(i)
+                # Add laser animation
+                laser = {
+                    'start_pos': player_pos,
+                    'end_pos': enemy_positions[i],
+                    'color': player_color,
+                    'alpha': 255
+                }
+                lasers.append(laser)
+                # Play sound effect
+                random.choice(laser_sounds).play()
+
+    return destroyed_enemies, player_score
+
+def update_enemy_position(enemy_position, enemy_speed, enemy_horizontal_speed):
+    # Move enemy towards player.
+    ex, ey = enemy_position
+    ey += enemy_speed
+
+    # Move enemy horizontally towards player
+    if ex < player_pos[0]:
+        ex += enemy_horizontal_speed
+    elif ex > player_pos[0]:
+        ex -= enemy_horizontal_speed
+    enemy_position = (ex, ey)
+
+    return enemy_position
 
 create_enemy_count = 0
 
@@ -172,21 +206,7 @@ while not done:
         prob_1_history.pop(0)
 
     # Check for collisions with enemies
-    tolerance_range = 5
-    for i in range(num_enemies):
-        if abs(player_color[0] - enemy_colors[i][0]) < tolerance_range and abs(player_color[2] - enemy_colors[i][2]) < tolerance_range:
-            if i not in destroyed_enemies:
-                destroyed_enemies.append(i)
-                # Add laser animation
-                laser = {
-                    'start_pos': player_pos,
-                    'end_pos': enemy_positions[i],
-                    'color': player_color,
-                    'alpha': 255
-                }
-                lasers.append(laser)
-                # Play sound effect
-                random.choice(laser_sounds).play()
+    handle_collisions(player_color, enemy_colors, destroyed_enemies, player_score)
 
     # Update enemy colors and positions
     enemy_qcs = [qc for qc in enemy_qcs if qc is not None]
@@ -246,15 +266,8 @@ while not done:
 
         else:
             # Move enemies towards player.
+            enemy_positions[i] = update_enemy_position(enemy_positions[i], enemy_speed, enemy_horizontal_speed)
             ex, ey = enemy_positions[i]
-            ey += enemy_speed
-
-            # Move enemy horizontally towards player
-            if ex < player_pos[0]:
-                ex += enemy_horizontal_speed
-            elif ex > player_pos[0]:
-                ex -= enemy_horizontal_speed
-            enemy_positions[i] = (ex, ey)
 
             # Check for collision with player
             if ey + enemy_radius >= player_pos[1] - player_radius:
