@@ -106,12 +106,7 @@ def handle_collisions(player_color, enemy_colors, destroyed_enemies, player_scor
             if i not in destroyed_enemies:
                 destroyed_enemies.append(i)
                 # Add laser animation
-                laser = {
-                    'start_pos': player_pos,
-                    'end_pos': enemy_positions[i],
-                    'color': player_color,
-                    'alpha': 255
-                }
+                laser = create_laser(player_pos, enemy_positions[i], player_color)
                 lasers.append(laser)
                 # Play sound effect
                 random.choice(laser_sounds).play()
@@ -131,6 +126,32 @@ def update_enemy_position(enemy_position, enemy_speed, enemy_horizontal_speed):
     enemy_position = (ex, ey)
 
     return enemy_position
+
+def create_laser(player_pos, enemy_position, player_color):
+    laser = {
+        'start_pos': player_pos,
+        'end_pos': enemy_position,
+        'color': player_color,
+        'alpha': 255
+    }
+
+    return laser
+
+def animate_lasers(lasers):
+    for laser in lasers[:]:
+        # Draw laser
+        laser_surface = pygame.Surface((640, 480))
+        laser_surface.set_colorkey((0, 0, 0))
+        laser_surface.set_alpha(laser['alpha'])
+        pygame.draw.line(laser_surface, laser['color'], laser['start_pos'], laser['end_pos'], 5)
+        screen.blit(laser_surface, (0, 0))
+
+        # Update laser alpha
+        laser['alpha'] -= 25
+        if laser['alpha'] <= 0:
+            lasers.remove(laser)
+
+    return lasers
 
 def handle_input(mouse_held_down, keys, qc, theta, phi):
     if mouse_held_down == 'increase' or keys[pygame.K_LEFT]:
@@ -294,18 +315,7 @@ while not done:
     num_enemies = len(enemy_qcs)
 
     # Animate lasers
-    for laser in lasers[:]:
-        # Draw laser
-        laser_surface = pygame.Surface((640, 480))
-        laser_surface.set_colorkey((0, 0, 0))
-        laser_surface.set_alpha(laser['alpha'])
-        pygame.draw.line(laser_surface, laser['color'], laser['start_pos'], laser['end_pos'], 5)
-        screen.blit(laser_surface, (0, 0))
-
-        # Update laser alpha
-        laser['alpha'] -= 25
-        if laser['alpha'] <= 0:
-            lasers.remove(laser)
+    lasers = animate_lasers(lasers)
 
     # Render player score
     font = pygame.font.Font(None, 36)
