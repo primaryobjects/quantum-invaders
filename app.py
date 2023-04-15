@@ -47,10 +47,10 @@ increase_button = pygame.Rect(button_margin, screen_height - button_height - but
 decrease_button = pygame.Rect(button_width * 2 + button_margin * 3, screen_height - button_height - button_margin, button_width, button_height)
 x_button = pygame.Rect(button_width + button_margin * 2, screen_height - button_height - button_margin, button_width, button_height)
 
-def update_player_color():
+def update_color(aqc):
     # Run the circuit and get the statevector
     backend = Aer.get_backend('statevector_simulator')
-    job = execute(qc, backend)
+    job = execute(aqc, backend)
     result = job.result()
     statevector = result.get_statevector()
 
@@ -62,7 +62,7 @@ def update_player_color():
     player_color = (prob_0 * 255, 0, prob_1 * 255)
     return player_color
 
-player_color = update_player_color()
+player_color = update_color(qc)
 
 # Set up the enemies' qubits and spheres
 num_enemies = 5
@@ -75,25 +75,7 @@ enemy_radius = 30 * scale
 
 destroyed_enemies_alpha = [255] * num_enemies
 
-def update_enemy_colors():
-    enemy_colors = []
-    for eqc in enemy_qcs:
-        # Run the circuit and get the statevector
-        backend = Aer.get_backend('statevector_simulator')
-        job = execute(eqc, backend)
-        result = job.result()
-        statevector = result.get_statevector()
-
-        # Calculate the probability of measuring 0 and 1
-        prob_0 = abs(statevector[0])**2
-        prob_1 = abs(statevector[1])**2
-
-        # Set the enemy's color based on the qubit state
-        enemy_color = (prob_0 * 255, 0, prob_1 * 255)
-        enemy_colors.append(enemy_color)
-    return enemy_colors
-
-enemy_colors = update_enemy_colors()
+enemy_colors = [update_color(eqc) for eqc in enemy_qcs]
 enemy_positions = [(i * (640 // num_enemies) + (320 // num_enemies), enemy_radius) for i in range(num_enemies)]
 
 def generate_enemy():
@@ -146,34 +128,34 @@ while not done:
     if mouse_held_down == 'increase':
         theta -= 0.1
         qc.ry(-0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
     elif mouse_held_down == 'decrease':
         theta += 0.1
         qc.ry(0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
     elif mouse_held_down == 'x':
         phi += 0.1
         qc.rx(0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
 
     # Handle keyboard input
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         theta -= 0.1
         qc.ry(-0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
     if keys[pygame.K_RIGHT]:
         theta += 0.1
         qc.ry(0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
     if keys[pygame.K_UP]:
         phi -= 0.1
         qc.rx(-0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
     if keys[pygame.K_DOWN]:
         phi += 0.1
         qc.rx(0.1, 0)
-        player_color = update_player_color()
+        player_color = update_color(qc)
 
     # Calculate player qubit probabilities
     backend = Aer.get_backend('statevector_simulator')
@@ -210,8 +192,7 @@ while not done:
     enemy_qcs = [qc for qc in enemy_qcs if qc is not None]
     num_enemies = len(enemy_qcs)
     if num_enemies > 0:
-        enemy_colors = update_enemy_colors()
-        #enemy_positions = [(i * (640 // num_enemies) + (320 // num_enemies), enemy_radius) for i in range(num_enemies)]
+        enemy_colors = [update_color(eqc) for eqc in enemy_qcs]
 
     # Add new enemies if 3 or more have been destroyed
     while create_enemy_count >= 3:
